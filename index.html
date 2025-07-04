@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Snake Water Gun - Smart Battle Arena</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 1000px;
+            width: 95%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d, #6bcf7f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 1.5rem;
+            color: #ffd93d;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3)); }
+            to { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6)); }
+        }
+
+        .ai-panel {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .ai-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .ai-commentary {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border-left: 4px solid #4ecdc4;
+            text-align: left;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+        }
+
+        .ai-thinking {
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .score-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .score-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffd93d;
+            text-shadow: 0 0 10px rgba(255, 217, 61, 0.5);
+        }
+
+        .battle-arena {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            min-height: 200px;
+        }
+
+        .player-choice, .ai-choice {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .choice-emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .vs-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+
+        .choice-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .choice-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 120px;
+        }
+
+        .choice-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .choice-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .choice-btn.snake { background: linear-gradient(45deg, #6bcf7f, #4ecdc4); }
+        .choice-btn.water { background: linear-gradient(45deg, #4ecdc4, #45b7d1); }
+        .choice-btn.gun { background: linear-gradient(45deg, #ff6b6b, #ee5a24); }
+
+        .ai-difficulty {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .difficulty-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .difficulty-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #ffd93d;
+            color: #ffd93d;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            margin: 0 1rem;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .game-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .game-title { font-size: 2rem; }
+            .choice-buttons { flex-direction: column; align-items: center; }
+            .battle-arena { flex-direction: column; gap: 1rem; }
+            .choice-emoji { font-size: 3rem; }
+            .ai-difficulty { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="game-container">
+        <h1 class="game-title">🤖 AI Snake Water Gun 🔫</h1>
+        <div class="subtitle">Battle Against an Intelligent AI Opponent</div>
+        
+        <div class="ai-panel">
+            <div class="ai-avatar">🤖</div>
+            <div class="ai-commentary" id="aiCommentary">
+                Welcome, human! I'm your AI opponent. I'll analyze your patterns and adapt my strategy. Choose your difficulty level and let's begin this epic battle!
+            </div>
+        </div>
+
+        <div class="ai-difficulty">
+            <button class="difficulty-btn active" onclick="setDifficulty('easy')">🟢 Easy</button>
+            <button class="difficulty-btn" onclick="setDifficulty('medium')">🟡 Medium</button>
+            <button class="difficulty-btn" onclick="setDifficulty('hard')">🔴 Hard</button>
+            <button class="difficulty-btn" onclick="setDifficulty('adaptive')">🧠 Adaptive</button>
+        </div>
+
+        <!-- Voice Commentary Controls -->
+        <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+            <label for="langSelect" style="color: #ffd93d; font-weight: bold;">Voice Language:</label>
+            <select id="langSelect" style="padding: 0.3rem 1rem; border-radius: 8px; border: none;">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="zh">Chinese</option>
+                <option value="ja">Japanese</option>
+                <option value="ru">Russian</option>
+                <!-- Add more as needed -->
+            </select>
+            <label style="color: #ffd93d; font-weight: bold;">Voice Commentary:</label>
+            <button id="voiceToggleBtn" class="reset-btn" style="padding: 0.5rem 1.5rem; font-size: 1rem;">🔊 On</button>
+        </div>
+
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">You</div>
+                <div class="score-value" id="playerScore">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Rounds</div>
+                <div class="score-value" id="roundCount">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">AI</div>
+                <div class="score-value" id="aiScore">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Win Rate</div>
+                <div class="score-value" id="winRate">0%</div>
+            </div>
+        </div>
+
+        <div class="battle-arena">
+            <div class="player-choice">
+                <div class="choice-emoji" id="playerChoice">❓</div>
+                <div>You</div>
+            </div>
+            <div class="vs-text">VS</div>
+            <div class="ai-choice">
+                <div class="choice-emoji" id="aiChoice">❓</div>
+                <div>AI</div>
+            </div>
+        </div>
+
+        <div class="choice-buttons">
+            <button class="choice-btn snake" onclick="playGame('snake')" id="snakeBtn">
+                🐍 Snake
+            </button>
+            <button class="choice-btn water" onclick="playGame('water')" id="waterBtn">
+                💧 Water
+            </button>
+            <button class="choice-btn gun" onclick="playGame('gun')" id="gunBtn">
+                🔫 Gun
+            </button>
+        </div>
+
+        <div class="game-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="snakeCount">0</div>
+                <div class="stat-label">Snake Picks</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="waterCount">0</div>
+                <div class="stat-label">Water Picks</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="gunCount">0</div>
+                <div class="stat-label">Gun Picks</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Current Streak</div>
+            </div>
+        </div>
+
+        <button class="reset-btn" onclick="resetGame()">🔄 Reset Game</button>
+        <button class="reset-btn" onclick="showAnalysis()">📊 AI Analysis</button>
+    </div>
+
+    <script>
+        let playerScore = 0;
+        let aiScore = 0;
+        let roundCount = 0;
+        let difficulty = 'easy';
+        let playerHistory = [];
+        let aiHistory = [];
+        let currentStreak = 0;
+        let lastResult = null;
+        let playerChoiceStats = { snake: 0, water: 0, gun: 0 };
+
+        // Voice Commentary State
+        let voiceEnabled = true;
+        let selectedLang = 'en';
+        let voices = [];
+
+        // Load available voices
+        function loadVoices() {
+            voices = window.speechSynthesis.getVoices();
+        }
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+        }
+
+        // Find best matching voice for selected language
+        function getVoiceForLang(lang) {
+            if (!voices.length) voices = window.speechSynthesis.getVoices();
+            // Try exact match
+            let voice = voices.find(v => v.lang && v.lang.startsWith(lang));
+            // Fallback: first voice
+            return voice || voices[0];
+        }
+
+        // Speak the given text in the selected language
+        function speakCommentary(text) {
+            if (!voiceEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel(); // Stop any ongoing speech
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = selectedLang;
+            const voice = getVoiceForLang(selectedLang);
+            if (voice) utter.voice = voice;
+            window.speechSynthesis.speak(utter);
+        }
+
+        // Handle language selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const langSelect = document.getElementById('langSelect');
+            langSelect.value = navigator.language.slice(0,2); // Default to browser lang
+            selectedLang = langSelect.value;
+            langSelect.addEventListener('change', function() {
+                selectedLang = this.value;
+            });
+            // Voice toggle
+            const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+            voiceToggleBtn.addEventListener('click', function() {
+                voiceEnabled = !voiceEnabled;
+                this.textContent = voiceEnabled ? '🔊 On' : '🔇 Off';
+                this.style.background = voiceEnabled ? 'linear-gradient(45deg, #667eea, #764ba2)' : 'linear-gradient(45deg, #888, #444)';
+                if (!voiceEnabled) window.speechSynthesis.cancel();
+            });
+        });
+
+        const choices = {
+            snake: { emoji: '🐍', beats: 'water', name: 'Snake' },
+            water: { emoji: '💧', beats: 'gun', name: 'Water' },
+            gun: { emoji: '🔫', beats: 'snake', name: 'Gun' }
+        };
+
+        const aiPersonalities = {
+            easy: {
+                name: "Rookie AI",
+                getChoice: () => Object.keys(choices)[Math.floor(Math.random() * 3)],
+                commentary: {
+                    intro: "I'm still learning! This should be fun and fair.",
+                    win: "Lucky guess! I'm getting better at this.",
+                    lose: "Nice move! You're teaching me a lot.",
+                    tie: "Great minds think alike! Or maybe we're both predictable?"
+                }
+            },
+            medium: {
+                name: "Tactical AI",
+                getChoice: () => {
+                    if (playerHistory.length < 2) return Object.keys(choices)[Math.floor(Math.random() * 3)];
+                    const lastChoice = playerHistory[playerHistory.length - 1];
+                    const counters = { snake: 'gun', water: 'snake', gun: 'water' };
+                    return Math.random() < 0.6 ? counters[lastChoice] : Object.keys(choices)[Math.floor(Math.random() * 3)];
+                },
+                commentary: {
+                    intro: "I'll analyze your last move and try to counter it. Let's see your strategy!",
+                    win: "I predicted your move! Pattern recognition is my specialty.",
+                    lose: "Impressive! You're adapting faster than I expected.",
+                    tie: "We're equally matched! This is getting interesting."
+                }
+            },
+            hard: {
+                name: "Strategic AI",
+                getChoice: () => {
+                    if (playerHistory.length < 3) return Object.keys(choices)[Math.floor(Math.random() * 3)];
+                    const recent = playerHistory.slice(-3);
+                    const mostCommon = getMostCommonChoice(recent);
+                    const counters = { snake: 'gun', water: 'snake', gun: 'water' };
+                    return Math.random() < 0.8 ? counters[mostCommon] : Object.keys(choices)[Math.floor(Math.random() * 3)];
+                },
+                commentary: {
+                    intro: "I'm analyzing your patterns and behavioral tendencies. This won't be easy for you!",
+                    win: "Your patterns are becoming clear. I'm adapting to your strategy!",
+                    lose: "Unexpected! You're harder to predict than most humans.",
+                    tie: "Fascinating! We're both evolving our strategies simultaneously."
+                }
+            },
+            adaptive: {
+                name: "Adaptive AI",
+                getChoice: () => {
+                    if (playerHistory.length < 5) return Object.keys(choices)[Math.floor(Math.random() * 3)];
+                    
+                    // Advanced pattern analysis
+                    const patterns = analyzePatterns(playerHistory);
+                    const predictedNext = predictNextMove(patterns);
+                    const counters = { snake: 'gun', water: 'snake', gun: 'water' };
+                    
+                    // Adapt difficulty based on player performance
+                    const winRate = playerScore / Math.max(roundCount, 1);
+                    const adaptiveChance = winRate > 0.6 ? 0.9 : winRate < 0.4 ? 0.5 : 0.7;
+                    
+                    return Math.random() < adaptiveChance ? counters[predictedNext] : Object.keys(choices)[Math.floor(Math.random() * 3)];
+                },
+                commentary: {
+                    intro: "I'm constantly learning and adapting. My difficulty scales with your skill. Bring your best game!",
+                    win: "My neural networks are optimizing. I'm learning from every move you make!",
+                    lose: "Remarkable adaptation! You're pushing me to evolve my algorithms.",
+                    tie: "Perfect equilibrium! We're both learning and adapting in real-time."
+                }
+            }
+        };
+
+        function setDifficulty(level) {
+            difficulty = level;
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const ai = aiPersonalities[level];
+            updateAICommentary(ai.commentary.intro);
+        }
+
+        function playGame(playerChoice) {
+            // Disable buttons during AI thinking
+            disableButtons(true);
+            
+            // Show AI thinking
+            updateAICommentary("🤔 Analyzing your choice and computing optimal response...", true);
+            
+            setTimeout(() => {
+                const aiChoice = aiPersonalities[difficulty].getChoice();
+                const result = determineWinner(playerChoice, aiChoice);
+                
+                // Update history
+                playerHistory.push(playerChoice);
+                aiHistory.push(aiChoice);
+                playerChoiceStats[playerChoice]++;
+                
+                roundCount++;
+                updateDisplay(playerChoice, aiChoice, result);
+                updateScores(result);
+                updateStats();
+                generateAICommentary(result);
+                
+                // Re-enable buttons
+                disableButtons(false);
+            }, 1500);
+        }
+
+        function disableButtons(disable) {
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.disabled = disable;
+            });
+        }
+
+        function determineWinner(player, ai) {
+            if (player === ai) return 'tie';
+            if (choices[player].beats === ai) return 'win';
+            return 'lose';
+        }
+
+        function updateDisplay(playerChoice, aiChoice, result) {
+            document.getElementById('playerChoice').textContent = choices[playerChoice].emoji;
+            document.getElementById('aiChoice').textContent = choices[aiChoice].emoji;
+            
+            // Add battle animation
+            const playerEmoji = document.getElementById('playerChoice');
+            const aiEmoji = document.getElementById('aiChoice');
+            
+            playerEmoji.style.animation = 'none';
+            aiEmoji.style.animation = 'none';
+            
+            setTimeout(() => {
+                playerEmoji.style.animation = 'bounce 0.5s ease-in-out';
+                aiEmoji.style.animation = 'bounce 0.5s ease-in-out';
+            }, 10);
+        }
+
+        function updateScores(result) {
+            if (result === 'win') {
+                playerScore++;
+                currentStreak = lastResult === 'win' ? currentStreak + 1 : 1;
+            } else if (result === 'lose') {
+                aiScore++;
+                currentStreak = lastResult === 'lose' ? currentStreak + 1 : 1;
+            } else {
+                currentStreak = 0;
+            }
+            
+            lastResult = result;
+            
+            document.getElementById('playerScore').textContent = playerScore;
+            document.getElementById('aiScore').textContent = aiScore;
+            document.getElementById('roundCount').textContent = roundCount;
+            
+            const winRate = roundCount > 0 ? Math.round((playerScore / roundCount) * 100) : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
+        }
+
+        function updateStats() {
+            document.getElementById('snakeCount').textContent = playerChoiceStats.snake;
+            document.getElementById('waterCount').textContent = playerChoiceStats.water;
+            document.getElementById('gunCount').textContent = playerChoiceStats.gun;
+            document.getElementById('streak').textContent = currentStreak;
+        }
+
+        function generateAICommentary(result) {
+            const ai = aiPersonalities[difficulty];
+            let commentary = ai.commentary[result];
+            
+            // Add contextual commentary
+            if (currentStreak >= 3) {
+                if (result === 'win') {
+                    commentary += ` You're on fire with ${currentStreak} wins in a row!`;
+                } else if (result === 'lose') {
+                    commentary += ` I'm dominating with ${currentStreak} consecutive victories!`;
+                }
+            }
+            
+            if (roundCount >= 10) {
+                const winRate = Math.round((playerScore / roundCount) * 100);
+                if (winRate >= 70) {
+                    commentary += " You're clearly a skilled strategist!";
+                } else if (winRate <= 30) {
+                    commentary += " I'm learning your patterns quite well!";
+                }
+            }
+            
+            updateAICommentary(commentary);
+        }
+
+        function updateAICommentary(text, thinking = false) {
+            const commentaryEl = document.getElementById('aiCommentary');
+            commentaryEl.innerHTML = thinking ? text + ' <span class="typing-indicator">●</span>' : text;
+            commentaryEl.className = thinking ? 'ai-commentary ai-thinking' : 'ai-commentary';
+            // Voice commentary
+            if (!thinking) speakCommentary(text.replace(/<[^>]+>/g, ''));
+        }
+
+        function analyzePatterns(history) {
+            const patterns = {};
+            for (let i = 0; i < history.length - 1; i++) {
+                const current = history[i];
+                const next = history[i + 1];
+                if (!patterns[current]) patterns[current] = {};
+                if (!patterns[current][next]) patterns[current][next] = 0;
+                patterns[current][next]++;
+            }
+            return patterns;
+        }
+
+        function predictNextMove(patterns) {
+            if (playerHistory.length === 0) return Object.keys(choices)[Math.floor(Math.random() * 3)];
+            
+            const lastMove = playerHistory[playerHistory.length - 1];
+            const nextMoves = patterns[lastMove];
+            
+            if (!nextMoves) return Object.keys(choices)[Math.floor(Math.random() * 3)];
+            
+            let maxCount = 0;
+            let predictedMove = 'snake';
+            
+            for (const move in nextMoves) {
+                if (nextMoves[move] > maxCount) {
+                    maxCount = nextMoves[move];
+                    predictedMove = move;
+                }
+            }
+            
+            return predictedMove;
+        }
+
+        function getMostCommonChoice(choiceArray) {
+            const counts = {};
+            choiceArray.forEach(choice => counts[choice] = (counts[choice] || 0) + 1);
+            return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+        }
+
+        function showAnalysis() {
+            const totalGames = roundCount;
+            const winRate = totalGames > 0 ? Math.round((playerScore / totalGames) * 100) : 0;
+            const mostUsed = getMostCommonChoice(playerHistory);
+            
+            let analysis = `📊 Game Analysis:\n\n`;
+            analysis += `🎯 Your win rate: ${winRate}%\n`;
+            analysis += `🎮 Total rounds: ${totalGames}\n`;
+            analysis += `⚡ Current streak: ${currentStreak}\n`;
+            analysis += `🎲 Most used choice: ${choices[mostUsed]?.name || 'None'}\n\n`;
+            
+            if (playerHistory.length > 5) {
+                analysis += `🧠 AI Insights:\n`;
+                analysis += `• You tend to favor ${choices[mostUsed]?.name}\n`;
+                analysis += `• Your play style is ${winRate > 60 ? 'aggressive' : winRate < 40 ? 'defensive' : 'balanced'}\n`;
+                analysis += `• Pattern predictability: ${playerHistory.length > 10 ? 'Moderate' : 'Low'}\n`;
+            }
+            
+            updateAICommentary(analysis);
+        }
+
+        function resetGame() {
+            playerScore = 0;
+            aiScore = 0;
+            roundCount = 0;
+            currentStreak = 0;
+            lastResult = null;
+            playerHistory = [];
+            aiHistory = [];
+            playerChoiceStats = { snake: 0, water: 0, gun: 0 };
+            
+            document.getElementById('playerScore').textContent = '0';
+            document.getElementById('aiScore').textContent = '0';
+            document.getElementById('roundCount').textContent = '0';
+            document.getElementById('winRate').textContent = '0%';
+            document.getElementById('playerChoice').textContent = '❓';
+            document.getElementById('aiChoice').textContent = '❓';
+            
+            updateStats();
+            updateAICommentary('Game reset! Ready for a fresh battle. I\'ll start with a clean slate, but I\'ll quickly adapt to your new strategy!');
+        }
+
+        // Initialize particles
+        function initParticles() {
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 6 + 's';
+                    document.getElementById('particles').appendChild(particle);
+                    
+                    setTimeout(() => {
+                        particle.remove();
+                    }, 6000);
+                }, i * 400);
+            }
+        }
+
+        setInterval(initParticles, 3000);
+        initParticles();
+    </script>
+</body>
+</html>
